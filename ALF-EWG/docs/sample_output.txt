@@ -1,0 +1,87 @@
+ALF-EWG: Autonomous Landslide & Flash-Flood Early Warning Grid
+
+==================== UNIT I: Core foundations & call semantics ====================
+Hazard (rain 85mm/hr, slope 40deg)     = 77.6667
+Hazard (saturation 90%, vibration 18Hz) = 84.6
+Flash-flood (river 6.5m, rain 70, sat 80)= 77.625
+Probe moved to (30.7426, 79.0879) -> local grid x=2009.37 m, y=884.592 m
+Accumulated state: n=3 sum=162.5 peak=63
+[AUDIT] station 1 (Kedarghati) raw metrics: rain=85 mm/hr, slope=40 deg, saturation=90 %, vibration=18 Hz, samples=1, peak=81.1333
+
+==================== UNIT II: Encapsulation, dynamic memory & operator overloading ====================
+After b1.at(0)=999 : b1[0]=999  b2[0]=10  (deep copy => independent)
+Dynamic ctor copy: b3[0]=1 size=5
+b2 after assignment: size=5 mean=3
+Active stations before block: 0
+Active stations after creating 3: 3
+Active stations with a copy alive: 4
+Active stations after copy destroyed: 3
+Regional aggregate: Zone(Kedarghati+Rishikesh) [3 stations, peak=81.1, mean=59.4]
+a > b ? yes   (hazard 81.1333 vs 32.15)
+Const view: Kedarghati hazard=81.1333 history mean=81.1333
+Console <<: 1 Kedarghati 30.73 79.06 1890 81.1333
+Re-read via >>:
+   1 Kedarghati 30.73 79.06 1890 81.1333
+   2 Rishikesh 30.09 78.27 372 32.15
+   3 Chamoli 30.4 79.32 1130 65.0667
+Siren1=EMERGENCY Siren2=NORMAL | global level=EMERGENCY activations=1
+Active stations after block: 0
+
+==================== UNIT III: Inheritance, containership & polymorphism ====================
+
+-- sweep cycle 1 --
+Soil-Ridge    SoilMoisture(%)   74.8995  ok      battery 99%
+Geo-Fault     Seismic(Hz)       11.3791  ok      battery 99%
+Tilt-Slope    Tilt(deg)         3.22495  ok      battery 99%
+Sonar-Gauge   RiverLevel(m)     3.49836  ok      battery 99%
+Hybrid-Probe  HybridProbe(idx)  65.2032  ALARM   battery 83%
+
+-- sweep cycle 2 --
+Soil-Ridge    SoilMoisture(%)   76.0444  ok      battery 98%
+Geo-Fault     Seismic(Hz)       10.5745  ok      battery 98%
+Tilt-Slope    Tilt(deg)         3.56662  ok      battery 98%
+Sonar-Gauge   RiverLevel(m)     3.82137  ok      battery 98%
+Hybrid-Probe  HybridProbe(idx)  64.3778  ALARM   battery 86%
+
+-- sweep cycle 3 --
+Soil-Ridge    SoilMoisture(%)   86       ALARM   battery 97%
+Geo-Fault     Seismic(Hz)       9.37862  ok      battery 97%
+Tilt-Slope    Tilt(deg)         3.73376  ok      battery 97%
+Sonar-Gauge   RiverLevel(m)     5.4      ALARM   battery 97%
+Hybrid-Probe  HybridProbe(idx)  64.6665  ALARM   battery 89%
+
+Diamond check: same BaseSensorNode subobject via both paths? YES (virtual base shared)
+Unambiguous deviceId(): 105 | HybridProbe#105 [hybrid-fw-2.1, sent 3 pkts]
+Containership: probe owns PowerSubsystem, battery=89% (composed object, not inherited)
+
+==================== UNIT IV: Streams, persistence, exception safety & STL ====================
+[Exceptions]
+  caught: SensorFailureException: node 201 failed -> battery depleted at 'Weak-Node'
+  caught: ThresholdOverflowException: reading 55.000000 exceeds physical sensor limit 20.000000
+  caught (as std::exception): TelemetryChecksumMismatch: stored 0x0D31B27E but computed 0x4CC29835
+
+[Binary log] sizeof(record)=64 bytes
+  after TX1 commit  : committed=3 file=200 B
+  TX2 failed: ThresholdOverflowException: reading 250.000000 exceeds physical sensor limit 200.000000
+  after TX2 rollback: committed=3 file=328 B (orphan bytes invisible)
+  after TX3 commit  : committed=5 file=328 B
+  reopened log, read back 5 verified records
+
+[std::map grouping]
+  Chamoli: 1 incident(s)
+  Joshimath: 1 incident(s)
+  Kedarghati: 2 incident(s)
+  Rishikesh: 1 incident(s)
+
+[Evacuation routing order]
+------------------------------------------------------------------
+Rank  Station   Region        Hazard    Level       EvacScore
+------------------------------------------------------------------
+1     3         Chamoli       79.5      EMERGENCY   435.4
+2     1         Kedarghati    88.2      EMERGENCY   405.9
+3     2         Rishikesh     61.0      WARNING     370.8
+4     5         Kedarghati    58.9      WARNING     271.1
+5     4         Joshimath     40.3      WATCH       210.8
+------------------------------------------------------------------
+
+All four units demonstrated successfully.

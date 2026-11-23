@@ -1,0 +1,5 @@
+build/
+alf_ewg
+*.bin
+*.o
+zone_stations.txt
